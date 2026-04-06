@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { extractText } = require('../utils/pdfParser');
+// const { extractText } = require('../utils/pdfParser');
 const Groq = require('groq-sdk');
 require('dotenv').config();
 

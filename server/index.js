@@ -1,29 +1,83 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
+const Groq = require('groq-sdk');
 require('dotenv').config();
-
-const analyzeRoute = require('./routes/analyze');
 
 const app = express();
 
-// Fix CORS
-app.use(cors({
-  origin: 'https://ai-resume-analyzer-omega-rouge.vercel.app',
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'multipart/form-data']
-}));
-
+app.use(cors({ origin: '*' }));
 app.use(express.json());
-app.use('/api', analyzeRoute);
 
-// Health check
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }
+});
+
 app.get('/', (req, res) => {
   res.json({ status: 'Backend is running!' });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.post('/api/analyze', upload.single('resume'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const jobRole = req.body.jobRole || 'Software Developer';
+    
+    // Extract text from PDF buffer
+    let resumeText = '';
+    try {
+      const pdfParse = require('pdf-parse');
+      const data = await pdfParse(req.file.buffer);
+      resumeText = data.text.slice(0, 3000);
+    } catch (pdfErr) {
+      // Fallback: use raw buffer text
+      resumeText = req.file.buffer
+        .toString('utf-8')
+        .replace(/[^\x20-\x7E\n]/g, ' ')
+        .slice(0, 3000);
+    }
+
+    if (!resumeText || resumeText.trim().length < 50) {
+      return res.status(400).json({ 
+        error: 'Could not extract text from PDF. Please try a different PDF.' 
+      });
+    }
+
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+    const prompt = `
+      You are an expert resume reviewer.
+      Analyze this resume for a ${jobRole} position.
+      Resume content: ${resumeText}
+
+      Return ONLY a valid JSON object with no extra text, no markdown, no backticks:
+      {
+        "score": (number out of 100),
+        "strengths": ["strength1", "strength2", "strength3"],
+        "improvements": ["improvement1", "improvement2", "improvement3"],
+        "missingKeywords": ["keyword1", "keyword2", "keyword3"],
+        "summary": "2 line overall summary"
+      }
+    `;
+
+    const response = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+    });
+
+    const raw = response.choices[0].message.content;
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    res.json(parsed);
+
+  } catch (err) {
+    console.error('Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = app;
