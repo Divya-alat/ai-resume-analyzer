@@ -33,19 +33,14 @@ app.post('/api/analyze', upload.single('resume'), async (req, res) => {
 
     const jobRole = req.body.jobRole || 'Software Developer';
 
-    // Extract text from PDF
-    let resumeText = '';
-    try {
-      const pdfParse = require('pdf-parse');
-      const data = await pdfParse(req.file.buffer);
-      resumeText = data.text.slice(0, 3000);
-    } catch (pdfErr) {
-      resumeText = req.file.buffer
-        .toString('utf-8')
-        .replace(/[^\x20-\x7E\n]/g, ' ')
-        .slice(0, 3000);
-    }
-
+    // Extract text - Vercel compatible
+let resumeText = '';
+const bufferStr = req.file.buffer.toString('latin1');
+resumeText = bufferStr
+  .replace(/[^\x20-\x7E\n\r]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .slice(0, 3000);
     if (!resumeText || resumeText.trim().length < 20) {
       return res.status(400).json({
         error: 'Could not read PDF text. Try a different PDF file.'
