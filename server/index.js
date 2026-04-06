@@ -33,34 +33,28 @@ app.post('/api/analyze', upload.single('resume'), async (req, res) => {
 
     const jobRole = req.body.jobRole || 'Software Developer';
 
-    // Extract text - Vercel compatible
-let resumeText = '';
-const bufferStr = req.file.buffer.toString('latin1');
-resumeText = bufferStr
-  .replace(/[^\x20-\x7E\n\r]/g, ' ')
-  .replace(/\s+/g, ' ')
-  .trim()
-  .slice(0, 3000);
-    if (!resumeText || resumeText.trim().length < 20) {
-      return res.status(400).json({
-        error: 'Could not read PDF text. Try a different PDF file.'
-      });
-    }
+    // Simple text extraction without pdf-parse
+    const resumeText = req.file.buffer
+      .toString('latin1')
+      .replace(/[^\x20-\x7E\n\r]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 3000);
 
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
     const prompt = `
       You are an expert resume reviewer.
-      Analyze this resume for a ${jobRole} position.
+      Analyze this resume text for a ${jobRole} position.
       Resume content: ${resumeText}
 
-      Return ONLY a valid JSON object with no extra text, no markdown, no backticks:
+      Return ONLY valid JSON, no markdown, no backticks:
       {
         "score": (number out of 100),
-        "strengths": ["strength1", "strength2", "strength3"],
-        "improvements": ["improvement1", "improvement2", "improvement3"],
-        "missingKeywords": ["keyword1", "keyword2", "keyword3"],
-        "summary": "2 line overall summary"
+        "strengths": ["s1", "s2", "s3"],
+        "improvements": ["i1", "i2", "i3"],
+        "missingKeywords": ["k1", "k2", "k3"],
+        "summary": "2 line summary"
       }
     `;
 

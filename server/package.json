@@ -1,7 +1,6 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "AI Resume Analyzer Backend",
   "main": "index.js",
   "engines": {
     "node": "20.x"
@@ -10,11 +9,10 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "groq-sdk": "^0.3.3",
-    "multer": "^1.4.5-lts.1",
-    "pdf-parse": "1.1.1"
+    "cors": "2.8.5",
+    "dotenv": "16.3.1",
+    "express": "4.18.2",
+    "groq-sdk": "0.3.3",
+    "multer": "1.4.5-lts.1"
   }
 }
