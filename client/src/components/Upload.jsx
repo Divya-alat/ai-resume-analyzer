@@ -16,7 +16,7 @@ function Upload({ setResult, setLoading }) {
     formData.append('jobRole', jobRole || 'Software Developer');
 
     try {
-      const res = await axios.post('https://ai-resume-analyzer-bzmp-dm95gfx1o-divya-alats-projects.vercel.app/api/analyze', formData);
+      const res = await axios.post('https://ai-resume-analyzer-bzmp.vercel.app/api/analyze', formData);
       setResult(res.data);
     } catch (err) {
       alert('Analysis failed: ' + (err.response?.data?.error || 'Server error'));

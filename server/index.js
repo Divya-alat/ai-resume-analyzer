@@ -8,9 +8,9 @@ const app = express();
 
 // Fix CORS
 app.use(cors({
-  origin: '*',
+  origin: 'https://ai-resume-analyzer-omega-rouge.vercel.app',
   methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type']
+  allowedHeaders: ['Content-Type', 'multipart/form-data']
 }));
 
 app.use(express.json());
