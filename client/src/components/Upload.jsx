@@ -16,7 +16,7 @@ function Upload({ setResult, setLoading }) {
     formData.append('jobRole', jobRole || 'Software Developer');
 
     try {
-      const res = await axios.post('http://localhost:5000/api/analyze', formData);
+      const res = await axios.post('https://your-backend-url.vercel.app/api/analyze', formData);
       setResult(res.data);
     } catch (err) {
       alert('Analysis failed: ' + (err.response?.data?.error || 'Server error'));
