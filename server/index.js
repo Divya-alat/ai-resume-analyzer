@@ -9,7 +9,6 @@ const app = express();
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// Handle preflight requests
 app.options('*', (req, res) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -17,7 +16,7 @@ app.options('*', (req, res) => {
   res.sendStatus(200);
 });
 
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }
 });
@@ -33,24 +32,23 @@ app.post('/api/analyze', upload.single('resume'), async (req, res) => {
     }
 
     const jobRole = req.body.jobRole || 'Software Developer';
-    
-    // Extract text from PDF buffer
+
+    // Extract text from PDF
     let resumeText = '';
     try {
       const pdfParse = require('pdf-parse');
       const data = await pdfParse(req.file.buffer);
       resumeText = data.text.slice(0, 3000);
     } catch (pdfErr) {
-      // Fallback: use raw buffer text
       resumeText = req.file.buffer
         .toString('utf-8')
         .replace(/[^\x20-\x7E\n]/g, ' ')
         .slice(0, 3000);
     }
 
-    if (!resumeText || resumeText.trim().length < 50) {
-      return res.status(400).json({ 
-        error: 'Could not extract text from PDF. Please try a different PDF.' 
+    if (!resumeText || resumeText.trim().length < 20) {
+      return res.status(400).json({
+        error: 'Could not read PDF text. Try a different PDF file.'
       });
     }
 
